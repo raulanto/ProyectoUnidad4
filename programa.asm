@@ -13,7 +13,7 @@ pila segment stack  ; Segmento de pila
     db 32 DUP('stack--')
 pila ends
 datos segment  ; Segmento de datos
-    mensaje_opciones db "1. Suma", 13, 10, "2. Resta", 13, 10, "3. Multiplicación", 13, 10, "4. Division", 13, 10, "5. Mostrar nombres $", 13, 10, "6. Salir $"
+    mensaje_opciones db "1. Suma", 13, 10, "2. Resta", 13, 10, "3. Multiplicacion", 13, 10, "4. Division", 13, 10, "5. Mostrar nombres $", 13, 10, "6. Salir $"
     resultado db 10,13,'El resultado es: $' 
     letrero db 10,13,'Ingrese un numero:  $' 
     mostrarNombres db "Rosado Jimenez Sergio Enrique", 13, 10, "Raul antonio de la cruz hernandez", 13, 10, "Bryan absalon Osorio Gallegos", 13, 10, "Miguel Ángel arguello lima", 13, 10, "eldrik gerardo lopez torrano $"
@@ -24,7 +24,8 @@ datos segment  ; Segmento de datos
     mensaje_error db 10, 13, 'Opcion no valida. Por favor, elija una opcion valida.', 10, 13, '$'
     error_division db 10,13,'Error: División por cero. Por favor, ingrese otro número.', 10,13,'$' 
     error_multiplicacion db 10,13,'Error no se puede multiplicar por 0', 10,13,'$'   
-    residuo db 10,13, 'con residuo: $'
+    residuo db 10,13, 'con residuo: $'    
+    letrero2 db 10,13, 'resultado es 0 $' 
 datos ends
 
 codigo segment 'code'  ; Segmento de código
@@ -120,26 +121,26 @@ opcion2:
     print letrero
     leerNumero n2
     AAA
-    ;------Resta-------
-    mov bh, n1
-    mov bl, n2
+;------Resta-------
+mov bh, n1
+mov bl, n2
 
-    sub bh, bl
+sub bh, bl
 
-    ; Verifica si el resultado es negativo
-    cmp bh, 0
-    jl resultado_negativo
+; Verifica si el resultado es negativo
+cmp bh, 0
+jl resultado_negativo
 
-    ; Si es positivo, muestra el resultado como lo haces normalmente
-    print resultado
+; Si es positivo, muestra el resultado como lo haces normalmente
+print resultado
 
-    mov ah, 02h
-    mov dl, bh
-    add dl, 30h
-    int 21h
-    mov ah,01h
-    int 21h 
-    jmp mostrar_menu
+mov ah, 02h
+mov dl, bh
+add dl, 30h
+int 21h
+        mov ah,01h
+        int 21h 
+        jmp mostrar_menu
 
 resultado_negativo:
     ; Si el resultado es negativo, muestra el signo "-" y luego el valor absoluto del resultado
@@ -210,15 +211,17 @@ opcion4:
     ; Division
     call limpiarPantalla  
     call posicionarCursor
-    print letrero8
+    print letrero
 
     leerNumero n1
 
-    print letrero8
+    print letrero
 
     leerNumero n2
 
     ; Verificar si el divisor es 0
+    cmp n1, 0
+    je division_por_cero
     cmp n2, 0
     je division_por_cero
 
@@ -230,38 +233,37 @@ opcion4:
     mov cl, al    ; Guarda el resultado en el registro CL
                   ; Recuerda que el resultado de la división se guarda en AL y el residuo en AH
 
-    ; Muestra el resultado
-    print letrero9
-
     ; Mostrar el signo si es negativo
+    print resultado
+    mov ah, 02h
+    mov dl, '-'
+    int 21h
+
+    cmp cl, 0   ; Verificar si el resultado es cero
+    je resultado_cero
+
+    ; Mostrar el resultado
     mov ah, 02h
     mov dl, cl
-    int 21h
-    mov ah, 02h
-    mov dl, residuo
-    int 21h
-
-    mov ah, 02h
-    mov dl, ch
-    int 21h
-
-    ; Finaliza la cadena
-    mov ah, 09h
-    lea dx, final_cadena
-    int 21h
-
-    jmp mostrar_menu
-
-division_por_cero:
-    ; Muestra un mensaje de error si el divisor es 0
-    print error_division
-    jmp mostrar_menu
-division_por_cero:
-    ; Muestra un mensaje de error si el divisor es 0
-    print error_division   
-    mov ah,01h
+    add dl, 30h
     int 21h 
+    mov ah,01h
+    int 21h  
     jmp mostrar_menu
+
+    resultado_cero: 
+        print letrero  
+        mov ah,01h
+        int 21h  
+        jmp mostrar_menu
+    
+    division_por_cero:
+        ; Muestra un mensaje de error si el divisor es 0
+        print error_division 
+            mov ah,01h
+            int 21h  
+        jmp mostrar_menu
+
 
 opcion5: 
     call limpiarPantalla  
