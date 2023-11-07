@@ -3,22 +3,20 @@ print macro cadena  ; Esta macro imprime en pantalla una cadena y como parametro
     lea dx, cadena
     int 21h
 endm      
-
 leerNumero macro var 
     mov ah,01h
     int 21h
     sub al,30h   
     mov var,al
 endm
-
 pila segment stack  ; Segmento de pila
     db 32 DUP('stack--')
 pila ends
-
 datos segment  ; Segmento de datos
-    mensaje_opciones db "1. Suma", 13, 10, "2. Resta", 13, 10, "3. Multiplicación", 13, 10, "4. Division", 13, 10, "5. Salir $"
+    mensaje_opciones db "1. Suma", 13, 10, "2. Resta", 13, 10, "3. Multiplicación", 13, 10, "4. Division", 13, 10, "5. Mostrar nombres $", 13, 10, "6. Salir $"
     resultado db 10,13,'El resultado es: $' 
     letrero db 10,13,'Ingrese un numero:  $' 
+    mostrarNombres db "Rosado Jimenez Sergio Enrique", 13, 10, "Raul antonio de la cruz hernandez", 13, 10, "Bryan absalon Osorio Gallegos", 13, 10, "Miguel Ángel arguello lima", 13, 10, "eldrik gerardo lopez torrano $"
     color_pantalla db 02h  ; Color de pantalla
     color_letra db 0       ; Color de letra (negro por defecto)
     n1 db ?
@@ -32,17 +30,14 @@ datos ends
 codigo segment 'code'  ; Segmento de código
 main proc FAR
     assume ss:pila, ds:datos, cs:codigo
-
     mov ax, datos
     mov ds, ax
     mostrar_menu:
     ; Limpia la pantalla
     call limpiarPantalla
-
     ; Posiciona el cursor
     mov dx, 1001h  
     call posicionarCursor
-
     print mensaje_opciones  
     print letrero
     mov ah, 01h  ; Solicita una opción al usuario
@@ -59,10 +54,12 @@ main proc FAR
     cmp al, 35h
     je sub_opcion5
     cmp al, 36h
-    je sub_opcion5
+    je sub_opcion6
 
     ; Si el usuario ingresa un número que no está en las opciones, mostrar un mensaje de error
     print mensaje_error
+    mov ah,01h
+    int 21h 
     jmp mostrar_menu
 
   sub_opcion1:
@@ -75,6 +72,8 @@ main proc FAR
     jmp opcion4
   sub_opcion5:
     jmp opcion5
+  sub_opcion6:
+    jmp opcion6
 
 opcion1:
     ; Suma
@@ -99,72 +98,50 @@ opcion1:
     mov al,bl 
     
     AAA
-    
     mov cx,ax 
     add cx,3030h
-    
     print resultado
-    
     mov ah,02h
     mov dl,ch
     int 21h
-    
     mov ah,02h
     mov dl,cl
     int 21h
-    
     mov ah,01h
     int 21h  
-
     jmp mostrar_menu
-
 opcion2:
     ; Resta
     call limpiarPantalla  
     call posicionarCursor
-    
     print letrero
-    
     leerNumero n1
     ;------------------
     print letrero
-    
     leerNumero n2
-    
     AAA
-    
     ;------Resta-------
     mov bh, n1
     mov bl, n2
-    
     sub bh, bl
-    
     ; Verifica si el resultado es negativo
     cmp bh, 0
     jge resultado_positivo  ; Si el resultado es positivo o cero, salta a la etiqueta resultado_positivo
-    
     ; Si el resultado es negativo, muestra el signo "-" y luego el valor absoluto del resultado
     print resultado
-    
     mov ah, 02h
     mov dl, '-'
     int 21h
-    
     neg bh  ; Cambia el signo del resultado a positivo
-    
     resultado_positivo:
         print resultado
         mov ah, 02h
         mov dl, bh
         add dl, 30h
         int 21h
-        
         mov ah, 01h
         int 21h
-        
         jmp mostrar_menu
-
-
 opcion3:
     ; Multiplicacion
     call limpiarPantalla  
@@ -204,6 +181,8 @@ opcion3:
     multiplicacion_por_cero:
         ; Muestra un mensaje de error si alguno de los números es 0
         print error_multiplicacion
+        mov ah,01h
+        int 21h 
         jmp mostrar_menu
 opcion4:
     ; Division
@@ -227,12 +206,25 @@ opcion4:
     mov dl,cl   
     add dl,30h  ; 
     int 21h
+    mov ah,01h
+    int 21h 
     jmp mostrar_menu
 division_por_cero:
     ; Muestra un mensaje de error si el divisor es 0
-    print error_division  
+    print error_division   
+    mov ah,01h
+    int 21h 
     jmp mostrar_menu
-opcion5:
+
+opcion5: 
+    call limpiarPantalla  
+    call posicionarCursor
+    print mostrarNombres 
+    mov ah,01h
+    int 21h  
+    jmp mostrar_menu
+
+opcion6:
     mov ah, 4ch
     int 21h
 ret
