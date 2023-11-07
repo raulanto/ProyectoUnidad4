@@ -111,8 +111,8 @@ opcion1:
     int 21h  
     jmp mostrar_menu
 opcion2:
-    ; Resta
-    call limpiarPantalla  
+; Resta
+    call limpiarPantalla
     call posicionarCursor
     print letrero
     leerNumero n1
@@ -123,25 +123,47 @@ opcion2:
     ;------Resta-------
     mov bh, n1
     mov bl, n2
+
     sub bh, bl
+
     ; Verifica si el resultado es negativo
     cmp bh, 0
-    jge resultado_positivo  ; Si el resultado es positivo o cero, salta a la etiqueta resultado_positivo
-    ; Si el resultado es negativo, muestra el signo "-" y luego el valor absoluto del resultado
+    jl resultado_negativo
+
+    ; Si es positivo, muestra el resultado como lo haces normalmente
     print resultado
+
+    mov ah, 02h
+    mov dl, bh
+    add dl, 30h
+    int 21h
+    mov ah,01h
+    int 21h 
+    jmp mostrar_menu
+
+resultado_negativo:
+    ; Si el resultado es negativo, muestra el signo "-" y luego el valor absoluto del resultado
+    mov ah, 09h
+    lea dx, resultado
+    int 21h
+
     mov ah, 02h
     mov dl, '-'
     int 21h
+
     neg bh  ; Cambia el signo del resultado a positivo
-    resultado_positivo:
-        print resultado
-        mov ah, 02h
-        mov dl, bh
-        add dl, 30h
-        int 21h
-        mov ah, 01h
-        int 21h
-        jmp mostrar_menu
+
+    mov ah, 02h
+    mov dl, bh
+    add dl, 30h
+    int 21h
+
+    mov ah, 01h
+    int 21h
+
+    jmp mostrar_menu
+
+
 opcion3:
     ; Multiplicacion
     call limpiarPantalla  
@@ -188,26 +210,51 @@ opcion4:
     ; Division
     call limpiarPantalla  
     call posicionarCursor
-    print letrero
+    print letrero8
+
     leerNumero n1
-    print letrero
+
+    print letrero8
+
     leerNumero n2
+
     ; Verificar si el divisor es 0
     cmp n2, 0
     je division_por_cero
-    ;proceso division
-    mov ax,0h   
-    mov al,n1   
-    mov bl,n2   
-    div bl      
-    mov cl,al                              
-    print resultado
-    mov ah,02h  ;
-    mov dl,cl   
-    add dl,30h  ; 
+
+    ; Proceso de división
+    mov ax, 0h   ; Limpia el registro AX antes de la división
+    mov al, n1   ; Guarda los dígitos en los registros AL y BL
+    mov bl, n2   ; Es importante seguir este orden para obtener el resultado correcto
+    div bl        ; Realiza la división
+    mov cl, al    ; Guarda el resultado en el registro CL
+                  ; Recuerda que el resultado de la división se guarda en AL y el residuo en AH
+
+    ; Muestra el resultado
+    print letrero9
+
+    ; Mostrar el signo si es negativo
+    mov ah, 02h
+    mov dl, cl
     int 21h
-    mov ah,01h
-    int 21h 
+    mov ah, 02h
+    mov dl, residuo
+    int 21h
+
+    mov ah, 02h
+    mov dl, ch
+    int 21h
+
+    ; Finaliza la cadena
+    mov ah, 09h
+    lea dx, final_cadena
+    int 21h
+
+    jmp mostrar_menu
+
+division_por_cero:
+    ; Muestra un mensaje de error si el divisor es 0
+    print error_division
     jmp mostrar_menu
 division_por_cero:
     ; Muestra un mensaje de error si el divisor es 0
